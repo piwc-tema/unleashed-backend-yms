@@ -3,10 +3,21 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const shouldReset = process.env.RESET_DB === 'true'; // Use an environment variable for control
+
+  if (shouldReset) {
+    console.log('Resetting database...');
+    await prisma.auditLog.deleteMany();
+    await prisma.formHistory.deleteMany();
+    await prisma.form.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.admin.deleteMany();
+    console.log('Database reset complete.');
+  }
   console.log('Seeding database...');
 
   // Seed a Super Admin
-  const superAdmin = await prisma.admin.create({
+  const superAdmin: any = await prisma.admin.create({
     data: {
       email: 'superadmin@example.com',
       password: 'securepassword',
@@ -26,7 +37,7 @@ async function main() {
   });
 
   // Seed a User
-  const user = await prisma.user.create({
+  const user: any = await prisma.user.create({
     data: {
       fullName: 'John Doe',
       email: 'johndoe@example.com',
@@ -46,7 +57,7 @@ async function main() {
   });
 
   // Seed a Form for the User
-  const form = await prisma.form.create({
+  const form: any = await prisma.form.create({
     data: {
       userId: user.id,
       status: 'IN_PROGRESS',
