@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,114 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(uuid())
+  fullName         String
+  email            String        @unique
+  dob              DateTime
+  gender           Gender?
+  phoneNumber      String?
+  registrationLink String?       @unique
+  forms            Form[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  DeletedForm      DeletedForm[]
+
+  @@index([email, fullName, dob])
+}
+
+model Form {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         FormStatus    @default(IN_PROGRESS)
+  submissionDate DateTime?
+  sections       FormSection[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  FormHistory    FormHistory[]
+
+  @@unique([userId, status])
+  @@index([userId, submissionDate])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FormSection {
+  id          String   @id @default(uuid())
+  formId      String
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  sectionName String
+  data        Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([formId, sectionName])
+}
+
+model Admin {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  role      AdminRole
+  auditLogs AuditLog[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([email, role])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  admin      Admin    @relation(fields: [adminId], references: [id])
+  action     String // General description of the action (e.g., "Created User", "Deleted Form").
+  entityType String // Type of entity affected, e.g., "User", "Form".
+  entityId   String? // ID of the affected entity for better traceability (nullable for system-wide actions).
+  details    Json? // Optional field for more context or before/after snapshots.
+  timestamp  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([timestamp])
+  @@index([entityType, entityId])
+}
+
+model DeletedForm {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt DateTime @default(now())
+  recoverBy DateTime
+
+  @@index([userId, deletedAt])
+}
+
+model FormHistory {
+  id        String   @id @default(uuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  updatedBy String // ID of the user/admin who made the changes.
+  changes   Json // JSON object detailing the changes made to the form (e.g., {"field": "oldValue", "newValue"}).
+  updatedAt DateTime @default(now())
+
+  @@index([formId, updatedAt])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  PREFER_NOT_TO_SAY
+}
+
+enum FormStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  EDITOR
+  VIEWER
 }
