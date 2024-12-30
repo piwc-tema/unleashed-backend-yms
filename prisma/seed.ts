@@ -11,24 +11,25 @@ async function main() {
     await prisma.formHistory.deleteMany();
     await prisma.form.deleteMany();
     await prisma.user.deleteMany();
-    await prisma.admin.deleteMany();
+    await prisma.user.deleteMany();
     console.log('Database reset complete.');
   }
   console.log('Seeding database...');
 
   // Seed a Super Admin
-  const superAdmin: any = await prisma.admin.create({
+  const superAdmin: any = await prisma.user.create({
     data: {
+      fullName: 'Super Admin',
       email: 'superadmin@example.com',
       password: 'securepassword',
-      role: 'SUPER_ADMIN',
+      role: 'VIEWER',
     },
   });
 
   // Log the action
   await prisma.auditLog.create({
     data: {
-      adminId: superAdmin.id,
+      userId: superAdmin.id,
       action: 'Created Super Admin',
       entityType: 'Admin',
       entityId: superAdmin.id,
@@ -48,7 +49,7 @@ async function main() {
   // Log the action
   await prisma.auditLog.create({
     data: {
-      adminId: superAdmin.id,
+      userId: superAdmin.id,
       action: 'Created User',
       entityType: 'User',
       entityId: user.id,
@@ -67,7 +68,7 @@ async function main() {
   // Log the action
   await prisma.auditLog.create({
     data: {
-      adminId: superAdmin.id,
+      userId: superAdmin.id,
       action: 'Created Form',
       entityType: 'Form',
       entityId: form.id,

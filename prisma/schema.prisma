@@ -11,16 +11,21 @@ model User {
   id               String        @id @default(uuid())
   fullName         String
   email            String        @unique
-  dob              DateTime
+  password         String?
+  dob              DateTime?
   gender           Gender?
   phoneNumber      String?
+  role             Role          @default(USER)
+  auditLogs        AuditLog[]
   registrationLink String?       @unique
   forms            Form[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   DeletedForm      DeletedForm[]
+  token            tokens[]
 
   @@index([email, fullName, dob])
+  @@index([email, role])
 }
 
 model Form {
@@ -52,29 +57,17 @@ model FormSection {
   @@index([formId, sectionName])
 }
 
-model Admin {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  password  String
-  role      AdminRole
-  auditLogs AuditLog[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  @@index([email, role])
-}
-
 model AuditLog {
   id         String   @id @default(uuid())
-  adminId    String
-  admin      Admin    @relation(fields: [adminId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   action     String // General description of the action (e.g., "Created User", "Deleted Form").
   entityType String // Type of entity affected, e.g., "User", "Form".
   entityId   String? // ID of the affected entity for better traceability (nullable for system-wide actions).
   details    Json? // Optional field for more context or before/after snapshots.
   timestamp  DateTime @default(now())
 
-  @@index([adminId])
+  @@index([userId])
   @@index([timestamp])
   @@index([entityType, entityId])
 }
@@ -111,8 +104,23 @@ enum FormStatus {
   SUBMITTED
 }
 
-enum AdminRole {
+enum Role {
   SUPER_ADMIN
+  ADMIN
   EDITOR
   VIEWER
+  USER
+}
+
+model tokens {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  type        String
+  blacklisted Boolean  @default(false)
+  expiresAt   DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
 }
