@@ -6,6 +6,7 @@ import { LocalAuthGuard } from './guards/local/local-auth-guard.service';
 import { RolesGuard } from './guards/roles/roles.guard';
 import { LoggerModule } from '../logger/logger.module';
 import { PrismaModule } from '../config/prisma/prisma.module';
+import { EmailModule } from '../../infrastructure/email/email.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PrismaModule } from '../config/prisma/prisma.module';
       global: true,
       secret: process.env.JWT_SECRET || 'secret',
     }),
+    EmailModule,
   ],
   providers: [AuthService, JwtAuthGuard, LocalAuthGuard, RolesGuard],
   exports: [AuthService, JwtAuthGuard, LocalAuthGuard, RolesGuard],

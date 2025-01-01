@@ -3,12 +3,14 @@ import { PrismaService } from '../../../../core/config/prisma/prisma/prisma.serv
 import { RegisterUserDto } from '../../dto/register-user.dto';
 import generateRegistrationLink from '../../../../shared/utils/link-generator';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
+import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
     private loggerService: LoggerService,
+    private emailService: EmailService,
   ) {
     this.loggerService.setDefaultContext('UsersService');
   }
@@ -23,7 +25,16 @@ export class UsersService {
       this.loggerService.log(
         `Resending registration link (${registrationLink}) to ${dto.email}`,
       );
-      // Optionally send an email here
+      await this.emailService.sendEmail(
+        '',
+        'Welcome to Our YMS!',
+        'link-email',
+        {
+          name: existingUser.fullName,
+          link: existingUser.registrationLink,
+        },
+      );
+
       throw new ConflictException('Email already registered. Link resent.');
     }
 
@@ -34,6 +45,15 @@ export class UsersService {
         email: dto.email,
         registrationLink: generateRegistrationLink(),
       },
+    });
+
+    this.loggerService.log(
+      `Registration link (${newUser.registrationLink}) sent to ${dto.email}`,
+    );
+
+    await this.emailService.sendEmail('', 'Welcome to Our YMS!', 'link-email', {
+      name: newUser.fullName,
+      link: newUser.registrationLink,
     });
 
     return { link: newUser.registrationLink };

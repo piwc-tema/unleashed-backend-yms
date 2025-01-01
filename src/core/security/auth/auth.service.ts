@@ -6,6 +6,7 @@ import { PrismaService } from '../../config/prisma/prisma/prisma.service';
 import { Role } from '../enums/roles.enum';
 import * as moment from 'moment';
 import { TokenTypes } from '../enums/token-types.enum';
+import { EmailService } from '../../../infrastructure/email/services/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private prismaService: PrismaService,
     private jwtService: JwtService,
     private loggerService: LoggerService,
+    private emailService: EmailService,
   ) {}
 
   // for authentication: A
@@ -67,7 +69,18 @@ export class AuthService {
       },
     });
 
-    // TODO: Send the temporary password to the user's email
+    // Send the temporary password to the user's email
+    await this.emailService.sendEmail(
+      '',
+      'Welcome to Our YMS!',
+      'temp-password',
+      {
+        name: newUser.fullName,
+        password: tempPassword,
+        loginLink: 'https://yms.com/login',
+        siteName: 'YMS',
+      },
+    );
 
     const { password, ...createdUser } = newUser;
 

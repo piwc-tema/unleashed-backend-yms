@@ -12,8 +12,10 @@ import { LoggerService } from './core/logger/logger/logger.service';
 import { AdminsModule } from './modules/admins/admins.module';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './core/filters/http-exception/http-exception.filter';
+import { AppConfigModule } from './core/config/app-config/app-config.module';
 @Module({
   imports: [
+    AppConfigModule,
     LoggerModule,
     PrismaModule,
     AdminsModule,
