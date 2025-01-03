@@ -5,11 +5,7 @@ export class RegisterUserDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
-  fullName: string;
-
-  @IsNotEmpty()
-  @ApiProperty()
-  dob: Date;
+  firstName: string;
 
   @IsNotEmpty()
   @IsEmail()

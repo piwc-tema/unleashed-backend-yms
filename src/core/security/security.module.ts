@@ -7,6 +7,7 @@ import { RolesGuard } from './guards/roles/roles.guard';
 import { LoggerModule } from '../logger/logger.module';
 import { PrismaModule } from '../config/prisma/prisma.module';
 import { EmailModule } from '../../infrastructure/email/email.module';
+import { AccessMiddleware } from './middlewares/access/access.middleware';
 
 @Module({
   imports: [
@@ -18,7 +19,19 @@ import { EmailModule } from '../../infrastructure/email/email.module';
     }),
     EmailModule,
   ],
-  providers: [AuthService, JwtAuthGuard, LocalAuthGuard, RolesGuard],
-  exports: [AuthService, JwtAuthGuard, LocalAuthGuard, RolesGuard],
+  providers: [
+    AuthService,
+    JwtAuthGuard,
+    LocalAuthGuard,
+    RolesGuard,
+    AccessMiddleware,
+  ],
+  exports: [
+    AuthService,
+    JwtAuthGuard,
+    LocalAuthGuard,
+    RolesGuard,
+    AccessMiddleware,
+  ],
 })
 export class SecurityModule {}

@@ -4,6 +4,7 @@ import { RegisterUserDto } from '../../dto/register-user.dto';
 import generateRegistrationLink from '../../../../shared/utils/link-generator';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
+import { FormsService } from '../../../forms/services/forms/forms.service';
 
 @Injectable()
 export class UsersService {
@@ -11,6 +12,7 @@ export class UsersService {
     private prisma: PrismaService,
     private loggerService: LoggerService,
     private emailService: EmailService,
+    private formsService: FormsService,
   ) {
     this.loggerService.setDefaultContext('UsersService');
   }
@@ -21,7 +23,10 @@ export class UsersService {
     });
 
     if (existingUser) {
-      const registrationLink = generateRegistrationLink(existingUser.id);
+      // get the form for the user
+      const form = await this.formsService.findOneByUserId(existingUser.id);
+      console.log('form\n', form);
+      const registrationLink = generateRegistrationLink(form.id);
       this.loggerService.log(
         `Resending registration link (${registrationLink}) to ${dto.email}`,
       );
@@ -31,7 +36,7 @@ export class UsersService {
         'link-email',
         {
           name: existingUser.fullName,
-          link: existingUser.registrationLink,
+          link: registrationLink,
         },
       );
 
@@ -40,23 +45,29 @@ export class UsersService {
 
     const newUser: any = await this.prisma.user.create({
       data: {
-        fullName: dto.fullName,
-        dob: new Date(dto.dob),
+        firstName: dto.firstName,
         email: dto.email,
-        registrationLink: generateRegistrationLink(),
+        form: {
+          create: {}, // Create an empty form upon user creation
+        },
+      },
+      include: {
+        form: true, // Include the newly created form in the response
       },
     });
 
+    const registrationLink = generateRegistrationLink(newUser.form.id);
+
     this.loggerService.log(
-      `Registration link (${newUser.registrationLink}) sent to ${dto.email}`,
+      `Registration link (${registrationLink}) sent to ${dto.email}`,
     );
 
     await this.emailService.sendEmail('', 'Welcome to Our YMS!', 'link-email', {
       name: newUser.fullName,
-      link: newUser.registrationLink,
+      link: registrationLink,
     });
 
-    return { link: newUser.registrationLink };
+    return { link: registrationLink };
   }
 
   async createUser(data: any) {

@@ -75,7 +75,7 @@ export class AuthService {
       'Welcome to Our YMS!',
       'temp-password',
       {
-        name: newUser.fullName,
+        name: newUser.firstName,
         password: tempPassword,
         loginLink: 'https://yms.com/login',
         siteName: 'YMS',

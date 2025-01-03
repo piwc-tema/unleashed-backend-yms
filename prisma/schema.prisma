@@ -8,53 +8,40 @@ datasource db {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  fullName         String
-  email            String        @unique
-  password         String?
-  dob              DateTime?
-  gender           Gender?
-  phoneNumber      String?
-  role             Role          @default(USER)
-  auditLogs        AuditLog[]
-  registrationLink String?       @unique
-  forms            Form[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  DeletedForm      DeletedForm[]
-  token            tokens[]
+  id          String        @id @default(uuid())
+  firstName   String?
+  email       String        @unique
+  password    String?
+  role        Role          @default(USER)
+  form        Form? // Remove optional flag since every user should have a form
+  auditLogs   AuditLog[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  DeletedForm DeletedForm[]
+  token       tokens[]
 
-  @@index([email, fullName, dob])
   @@index([email, role])
 }
 
 model Form {
-  id             String        @id @default(uuid())
-  userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status         FormStatus    @default(IN_PROGRESS)
-  submissionDate DateTime?
-  sections       FormSection[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  FormHistory    FormHistory[]
+  id                  String        @id @default(uuid())
+  userId              String        @unique
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status              FormStatus    @default(IN_PROGRESS)
+  submissionDate      DateTime?
+  personalDetails     Json?
+  locationDetails     Json?
+  professionalDetails Json?
+  spiritualDetails    Json?
+  emergencyContact    Json?
+  additionalInfo      Json?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  FormHistory         FormHistory[]
 
-  @@unique([userId, status])
-  @@index([userId, submissionDate])
+  @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
-}
-
-model FormSection {
-  id          String   @id @default(uuid())
-  formId      String
-  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
-  sectionName String
-  data        Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([formId, sectionName])
 }
 
 model AuditLog {
@@ -102,6 +89,7 @@ enum Gender {
 enum FormStatus {
   IN_PROGRESS
   SUBMITTED
+  APPROVED
 }
 
 enum Role {

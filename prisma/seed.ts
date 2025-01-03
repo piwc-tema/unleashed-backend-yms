@@ -19,7 +19,7 @@ async function main() {
   // Seed a Super Admin
   const superAdmin: any = await prisma.user.create({
     data: {
-      fullName: 'Super Admin',
+      firstName: 'Kennedy',
       email: 'superadmin@example.com',
       password: 'securepassword',
       role: 'VIEWER',
@@ -40,9 +40,8 @@ async function main() {
   // Seed a User
   const user: any = await prisma.user.create({
     data: {
-      fullName: 'John Doe',
+      firstName: 'John',
       email: 'johndoe@example.com',
-      dob: new Date('1990-01-01'),
     },
   });
 

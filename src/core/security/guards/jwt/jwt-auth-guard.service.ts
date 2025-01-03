@@ -15,7 +15,7 @@ export class JwtAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token = extractTokenFromHeader(request);
 
     if (!token) {
       throw new UnauthorizedException('Invalid token');
@@ -31,20 +31,20 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token');
     }
   }
-
-  private extractTokenFromHeader(request: Request) {
-    const authHeader = request.headers.authorization;
-    if (!authHeader) {
-      return null;
-    }
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2) {
-      return null;
-    }
-    const [scheme, token] = parts;
-    if (!/^Bearer$/i.test(scheme)) {
-      return null;
-    }
-    return token;
-  }
 }
+
+export const extractTokenFromHeader = (request: Request) => {
+  const authHeader = request.headers.authorization;
+  if (!authHeader) {
+    return null;
+  }
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2) {
+    return null;
+  }
+  const [scheme, token] = parts;
+  if (!/^Bearer$/i.test(scheme)) {
+    return null;
+  }
+  return token;
+};
