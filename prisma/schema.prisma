@@ -45,18 +45,20 @@ model Form {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action     String // General description of the action (e.g., "Created User", "Deleted Form").
-  entityType String // Type of entity affected, e.g., "User", "Form".
-  entityId   String? // ID of the affected entity for better traceability (nullable for system-wide actions).
-  details    Json? // Optional field for more context or before/after snapshots.
-  timestamp  DateTime @default(now())
+  id           String   @id @default(uuid())
+  action       String?
+  actorId      String?
+  actorType    String?
+  resourceType String?
+  resourceId   String?
+  metadata     Json?
+  timestamp    DateTime @default(now())
+  actor        User?    @relation(fields: [actorId], references: [id])
 
-  @@index([userId])
+  @@index([actorId])
+  @@index([action])
   @@index([timestamp])
-  @@index([entityType, entityId])
+  @@index([resourceId])
 }
 
 model DeletedForm {

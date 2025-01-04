@@ -11,6 +11,7 @@ import {
   Request,
   Res,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AdminsService } from '../../services/admins/admins.service';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
@@ -21,6 +22,12 @@ import { RolesGuard } from '../../../../core/security/guards/roles/roles.guard';
 import { Roles } from '../../../../core/security/decorators/roles/roles.decorator';
 import { Role } from '../../../../core/security/enums/roles.enum';
 import { Response } from 'express';
+import { AuditInterceptor } from '../../../../infrastructure/audit/interceptors/audit/audit.interceptor';
+import {
+  AUDIT_ACTION_KEY,
+  AuditAction,
+} from '../../../../infrastructure/audit/decorators/audit-action/audit-action.decorator';
+import { AuditService } from '../../../../infrastructure/audit/services/audit/audit.service';
 
 @Controller('admins')
 export class AdminsController {
@@ -28,12 +35,15 @@ export class AdminsController {
     private adminsService: AdminsService,
     private loggerService: LoggerService,
     private authService: AuthService,
+    private auditService: AuditService,
   ) {
     this.loggerService.setDefaultContext('AdminsController');
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @UseInterceptors(AuditInterceptor)
+  @AuditAction(AUDIT_ACTION_KEY)
   async signIn(@Request() req) {
     return this.authService.login(req.user);
   }
@@ -147,5 +157,10 @@ export class AdminsController {
     return this.adminsService.approveForm(req.params.id);
   }
 
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('audit-logs')
+  async getAuditLogs(@Query() query) {
+    return this.auditService.getAuditLogs(query);
+  }
 }

@@ -29,11 +29,12 @@ async function main() {
   // Log the action
   await prisma.auditLog.create({
     data: {
-      userId: superAdmin.id,
       action: 'Created Super Admin',
-      entityType: 'Admin',
-      entityId: superAdmin.id,
-      details: { email: superAdmin.email },
+      actorType: 'Admin',
+      actorId: superAdmin.id,
+      resourceType: 'Admin',
+      resourceId: superAdmin.id,
+      metadata: { email: superAdmin.email },
     },
   });
 
@@ -48,11 +49,12 @@ async function main() {
   // Log the action
   await prisma.auditLog.create({
     data: {
-      userId: superAdmin.id,
       action: 'Created User',
-      entityType: 'User',
-      entityId: user.id,
-      details: { email: user.email, dob: user.dob },
+      actorType: 'User',
+      actorId: user.id,
+      resourceId: user.id,
+      resourceType: 'User',
+      metadata: { email: user.email, dob: user.dob },
     },
   });
 
@@ -67,11 +69,12 @@ async function main() {
   // Log the action
   await prisma.auditLog.create({
     data: {
-      userId: superAdmin.id,
+      actorId: superAdmin.id,
       action: 'Created Form',
-      entityType: 'Form',
-      entityId: form.id,
-      details: { status: form.status },
+      actorType: 'Form',
+      resourceId: form.id,
+      resourceType: 'Form',
+      metadata: { status: form.status },
     },
   });
 
