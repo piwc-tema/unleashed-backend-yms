@@ -6,6 +6,7 @@ import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import { EmailConfig } from '../../interfaces/email-config';
+import { Buffer } from 'buffer';
 
 @Injectable()
 export class EmailService {
@@ -64,6 +65,7 @@ export class EmailService {
     subject: string,
     templateName: string,
     context: Record<string, any> = {},
+    attachments?: { filename: string; content: Buffer }[],
   ) {
     const template = this.templates.get(templateName);
     if (!template) {
@@ -79,9 +81,32 @@ export class EmailService {
         to: this.configService.get<string>('TEST_EMAIL') || to,
         subject,
         html,
+        attachments,
       });
     } catch (e) {
       this.loggerService.error('Error sending email:', e);
     }
+  }
+
+  async sendEmailWithAttachment(
+    to: string,
+    subject: string,
+    templateName: string,
+    context: Record<string, any> = {},
+    attachment?: Buffer,
+    filename?: string,
+  ) {
+    if (attachment) {
+      const attachments = [
+        {
+          filename: filename || 'attachment.xlsx',
+          content: attachment,
+        },
+      ];
+      console.log('attachments', attachments);
+      return this.sendEmail(to, subject, templateName, context, attachments);
+    }
+
+    throw new Error('Attachment not found');
   }
 }

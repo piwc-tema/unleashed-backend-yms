@@ -87,6 +87,57 @@ export class AuthService {
     return createdUser;
   }
 
+  // update user's role and generate new password if they do not have one
+  async updateUserRole(userId: string, role: Role) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Generate a temporary password if user does not have one
+    let tempPassword = '';
+    if (!user.password) {
+      tempPassword = Math.random().toString(36).slice(-8);
+      this.loggerService.log(`Temporary password: ${tempPassword}`);
+
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
+      // Update the user with the hashed password
+      await this.prismaService.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      });
+    }
+
+    // Update the user's role
+    const updatedUser = await this.prismaService.user.update({
+      where: { id: userId },
+      data: { role },
+    });
+
+    // Send the temporary password to the user's email
+    if (tempPassword) {
+      await this.emailService.sendEmail(
+        '',
+        'Your Role has been Updated!',
+        'temp-password',
+        {
+          name: updatedUser.firstName,
+          password: tempPassword,
+          loginLink: 'https://yms.com/login',
+          siteName: 'YMS',
+        },
+      );
+    }
+
+    const { password, ...result } = updatedUser;
+    return result;
+  }
+
   async refreshToken(token: string) {
     try {
       const payload = await this.jwtService.verifyAsync(token);

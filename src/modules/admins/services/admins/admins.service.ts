@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../core/config/prisma/prisma/prisma.service';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
+import * as ExcelJS from 'exceljs';
+import { Buffer } from 'buffer';
+import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
 
 @Injectable()
 export class AdminsService {
   constructor(
     private prismaService: PrismaService,
     private loggerService: LoggerService,
+    private emailService: EmailService,
   ) {
     this.loggerService.setDefaultContext('AdminsService');
   }
@@ -31,7 +35,168 @@ export class AdminsService {
     return this.prismaService.user.findMany();
   }
 
-  // async findAdminsByRole(role: string) {
-  //   return this.prismaService.admin.findMany({ where: { role } });
-  // }
+  async getDashboardData({ status, page, limit, search }) {
+    const skip = (page - 1) * limit;
+
+    // Aggregate statistics
+    const stats = await this.prismaService.form.groupBy({
+      by: ['status'],
+      _count: true,
+    });
+
+    // Fetch filtered and paginated forms
+    const whereClause: any = {};
+    if (status) whereClause.status = status.toUpperCase();
+    if (search) {
+      whereClause.OR = [
+        { user: { fullName: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const forms = await this.prismaService.form.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      include: {
+        user: { select: { firstName: true, email: true } },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Total forms count
+    const totalCount = await this.prismaService.form.count({
+      where: whereClause,
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const nextPage = hasNextPage ? page + 1 : null;
+
+    return {
+      stats,
+      forms,
+      meta: {
+        totalCount,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        nextPage,
+      },
+    };
+  }
+
+  // get list of all users based on provided input filters for roles
+  async getUsers({ role }) {
+    const whereClause: any = {};
+    if (role) whereClause.role = role.toUpperCase();
+
+    return this.prismaService.user.findMany({ where: whereClause });
+  }
+
+  async getFormById(id: string) {
+    return this.prismaService.form.findUnique({ where: { id } });
+  }
+
+  async updateForm(id: string, data: any) {
+    return this.prismaService.form.update({ where: { id }, data });
+  }
+
+  async approveForm(id: string) {
+    // check if status = 'SUBMITTED', if in progress, throw error
+    const form = await this.prismaService.form.findUnique({ where: { id } });
+    if (form.status !== 'SUBMITTED') {
+      throw new Error('Form is not in SUBMITTED status');
+    }
+
+    // only approve if it's been submitted
+    return this.prismaService.form.update({
+      where: { id },
+      data: { status: 'APPROVED' },
+    });
+  }
+
+  async deleteForm(id: string) {
+    return this.prismaService.form.delete({ where: { id } });
+  }
+
+  async exportFormsToExcel({
+    status,
+    fromDate,
+    toDate,
+  }: {
+    status?: string;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<Buffer> {
+    const whereClause: any = {};
+    if (status) whereClause.status = status.toUpperCase();
+    if (fromDate && toDate) {
+      whereClause.createdAt = {
+        gte: new Date(fromDate),
+        lte: new Date(toDate),
+      };
+    }
+
+    const forms = await this.prismaService.form.findMany({
+      where: whereClause,
+      include: {
+        user: { select: { firstName: true, email: true } },
+      },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Forms');
+
+    // Add header row
+    worksheet.addRow([
+      'User Name',
+      'Email',
+      'Status',
+      'Date Started',
+      'Submission Date',
+    ]);
+
+    // Add data rows
+    forms.forEach((form) => {
+      worksheet.addRow([
+        form.user.firstName,
+        form.user.email,
+        form.status,
+        form.createdAt.toISOString(),
+        form.submissionDate?.toISOString() || 'Not Submitted',
+      ]);
+    });
+
+    // Auto-fit columns
+    worksheet.columns.forEach((column) => {
+      let maxLength = 10;
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        if (cell.value) {
+          maxLength = Math.max(maxLength, cell.value.toString().length);
+        }
+      });
+      column.width = maxLength + 2;
+    });
+
+    // Write workbook to a buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    //send email with attachment
+    await this.emailService.sendEmailWithAttachment(
+      '',
+      'Forms Export',
+      'attachment-email',
+      { siteName: 'YMS' },
+      Buffer.from(buffer),
+      'forms.xlsx',
+    );
+    console.log('email sent!');
+
+    return Buffer.from(buffer);
+  }
 }
