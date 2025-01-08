@@ -28,6 +28,8 @@ import {
   AuditAction,
 } from '../../../../infrastructure/audit/decorators/audit-action/audit-action.decorator';
 import { AuditService } from '../../../../infrastructure/audit/services/audit/audit.service';
+import { AuthResponseDto } from '../../../../shared/dto/auth-response.dto';
+import { ApiOkResponse } from '@nestjs/swagger';
 
 @Controller('admins')
 export class AdminsController {
@@ -44,7 +46,17 @@ export class AdminsController {
   @Post('login')
   @UseInterceptors(AuditInterceptor)
   @AuditAction(AUDIT_ACTION_KEY)
-  async signIn(@Request() req) {
+  @ApiOkResponse({
+    description: 'Successful login',
+    type: AuthResponseDto,
+  })
+  async signIn(@Request() req): Promise<{
+    user: any;
+    token: {
+      access: { expires: Date; token: string };
+      refresh: { expires: Date; token: string };
+    };
+  }> {
     return this.authService.login(req.user);
   }
 

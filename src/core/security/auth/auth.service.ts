@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoggerService } from '../../logger/logger/logger.service';
@@ -24,7 +24,6 @@ export class AuthService {
     });
     if (user && bcrypt.compareSync(pass, user.password)) {
       const { password, ...result } = user;
-      result['userId'] = user.id;
       return result;
     }
     return null;
@@ -34,13 +33,26 @@ export class AuthService {
   async login(user: any) {
     const tokens = await this.generateAuthTokens(user);
 
-    return {
-      user,
+    const response: {
+      user: any;
+      token: {
+        access: { expires: Date; token: string };
+        refresh: { expires: Date; token: string };
+      };
+    } = {
+      user: {
+        userId: user.id,
+        firstName: user.firstName,
+        email: user.email,
+        role: user.role,
+      },
       token: {
         access: tokens.access,
         refresh: tokens.refresh,
       },
     };
+
+    return response;
   }
 
   // for creating a new admin, authentication member
