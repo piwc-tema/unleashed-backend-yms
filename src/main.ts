@@ -5,6 +5,7 @@ import { ResponseInterceptor } from './core/interceptors/response/response.inter
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   // Apply global interceptor
   app.useGlobalInterceptors(new ResponseInterceptor());
 
