@@ -5,6 +5,8 @@ import { FormSectionType } from '../../enum/form-section-type';
 import { FormOwner } from '../../decorators/form-owner/form-owner.decorator';
 import { UpdateFormSectionDto } from '../../dtos/update-form.dto';
 import { AccessedBy } from '../../decorators/access-by/access-by.decorator';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { RegisterFormDto } from '../../dtos/register-form.dto';
 
 @Controller('forms')
 export class FormsController {
@@ -51,5 +53,13 @@ export class FormsController {
   async submit(@Body() body: any) {
     this.loggerService.log(`Submitting form ${body}`);
     return this.formsService.submit(body.formId);
+  }
+
+  @Post('register')
+  @ApiOperation({ summary: 'Register a user and generate a form link' })
+  @ApiResponse({ status: 200, description: 'Link generated successfully' })
+  @ApiResponse({ status: 400, description: 'Email already registered' })
+  async registerForm(@Body() dto: RegisterFormDto) {
+    return this.formsService.registerUser(dto);
   }
 }
