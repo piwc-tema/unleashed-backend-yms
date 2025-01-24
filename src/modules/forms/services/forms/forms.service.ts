@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,14 +8,76 @@ import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import { PrismaService } from '../../../../core/config/prisma/prisma/prisma.service';
 import { FormStatus } from '@prisma/client';
 import { FormSectionType } from '../../enum/form-section-type';
+import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
+import { RegisterUserDto } from '../../../users/dto/register-user.dto';
+import generateRegistrationLink from '../../../../shared/utils/link-generator';
 
 @Injectable()
 export class FormsService {
   constructor(
     private loggerService: LoggerService,
     private prismaService: PrismaService,
+    private emailService: EmailService,
   ) {
     this.loggerService.setDefaultContext(FormsService.name);
+  }
+
+  async registerUser(dto: RegisterUserDto) {
+    const existingUser: any = await this.prismaService.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      // get the form for the user
+      const form = await this.findOneByUserId(existingUser.id);
+      console.log('form\n', form);
+      const registrationLink = generateRegistrationLink(form.id);
+      this.loggerService.log(
+        `Resending registration link (${registrationLink}) to ${dto.email}`,
+      );
+      await this.emailService.sendEmail(
+        existingUser.email,
+        'Welcome to Our YMS!',
+        'link-email',
+        {
+          name: existingUser.firstName,
+          link: registrationLink,
+        },
+      );
+
+      throw new ConflictException('Email already registered. Link resent.');
+    }
+
+    const newUser: any = await this.prismaService.user.create({
+      data: {
+        firstName: dto.firstName,
+        email: dto.email,
+        form: {
+          create: {}, // Create an empty form upon user creation
+        },
+      },
+      include: {
+        form: true, // Include the newly created form in the response
+      },
+    });
+
+    const registrationLink = generateRegistrationLink(newUser.form.id);
+
+    this.loggerService.log(
+      `Registration link (${registrationLink}) sent to ${dto.email}`,
+    );
+
+    await this.emailService.sendEmail(
+      newUser.email,
+      'Welcome to Our YMS!',
+      'link-email',
+      {
+        name: newUser.firstName,
+        link: registrationLink,
+      },
+    );
+
+    return { link: registrationLink, formId: newUser.form.id };
   }
 
   async findAll() {
@@ -95,6 +158,13 @@ export class FormsService {
       throw new BadRequestException('Form not found');
     }
 
+    if (
+      form.status === FormStatus.SUBMITTED ||
+      form.status === FormStatus.APPROVED
+    ) {
+      throw new ConflictException('This form has already been submitted');
+    }
+
     const incompleteSections = [
       'personalDetails',
       'locationDetails',
@@ -112,7 +182,7 @@ export class FormsService {
 
     return this.prismaService.form.update({
       where: { id: formId },
-      data: { status: FormStatus.SUBMITTED },
+      data: { status: FormStatus.SUBMITTED, submissionDate: new Date() },
     });
   }
 
