@@ -78,7 +78,7 @@ export class EmailService {
     try {
       await this.transporter.sendMail({
         from: this.emailConfigData.from,
-        to: this.configService.get<string>('TEST_EMAIL') || to,
+        to: to || this.configService.get<string>('TEST_EMAIL'),
         subject,
         html,
         attachments,
