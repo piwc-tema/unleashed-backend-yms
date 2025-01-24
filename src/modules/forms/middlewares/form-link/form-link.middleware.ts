@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NestMiddleware,
-} from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { FormsService } from '../../services/forms/forms.service';
 import { InvalidFormLinkException } from '../../exceptions/invalid-form-link.exception';
 import { FormStatus, Prisma } from '@prisma/client';
@@ -24,13 +19,6 @@ export class FormLinkMiddleware implements NestMiddleware {
 
       if (!form || !form.user) {
         throw new InvalidFormLinkException();
-      }
-
-      if (form.status === FormStatus.SUBMITTED) {
-        throw new HttpException(
-          'This form has already been submitted',
-          HttpStatus.FORBIDDEN,
-        );
       }
 
       req['formOwner'] = { userId: form.user.id, email: form.user.email };
