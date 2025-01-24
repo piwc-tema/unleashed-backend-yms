@@ -69,7 +69,7 @@ export class AuditService {
         }),
     };
 
-    const [logs, total] = await Promise.all([
+    const [logs, totalCount] = await Promise.all([
       this.prismaService.auditLog.findMany({
         where,
         skip: (page - 1) * limit,
@@ -81,13 +81,20 @@ export class AuditService {
       }),
       this.prismaService.auditLog.count({ where }),
     ]);
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const nextPage = hasNextPage ? page + 1 : null;
 
     return {
       items: logs,
       meta: {
-        total,
+        totalCount,
         page,
-        lastPage: Math.ceil(total / limit),
+        limit,
+        totalPages,
+        hasNextPage,
+        nextPage,
+        lastPage: Math.ceil(totalCount / limit),
       },
     };
   }
