@@ -17,16 +17,12 @@ export class FormsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(FormLinkMiddleware, AccessMiddleware).forRoutes(
       {
-        path: 'forms/section/:formId/:sectionType',
-        method: RequestMethod.ALL,
-      },
-      {
         path: 'forms/:formId',
-        method: RequestMethod.ALL,
+        method: RequestMethod.GET,
       },
       {
         path: 'forms/section/:sectionType',
-        method: RequestMethod.ALL,
+        method: RequestMethod.PATCH,
       },
     );
   }
