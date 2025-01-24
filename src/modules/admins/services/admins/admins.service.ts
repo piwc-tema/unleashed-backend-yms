@@ -36,6 +36,10 @@ export class AdminsService {
   }
 
   async getDashboardData({ status, page, limit, search }) {
+    // convert page and limit to numbers
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+
     const skip = (page - 1) * limit;
 
     // Aggregate statistics
@@ -49,7 +53,7 @@ export class AdminsService {
     if (status) whereClause.status = status.toUpperCase();
     if (search) {
       whereClause.OR = [
-        { user: { fullName: { contains: search, mode: 'insensitive' } } },
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
         { user: { email: { contains: search, mode: 'insensitive' } } },
       ];
     }
@@ -86,6 +90,7 @@ export class AdminsService {
         totalPages,
         hasNextPage,
         nextPage,
+        lastPage: Math.ceil(totalCount / limit),
       },
     };
   }
@@ -96,6 +101,52 @@ export class AdminsService {
     if (role) whereClause.role = role.toUpperCase();
 
     return this.prismaService.user.findMany({ where: whereClause });
+  }
+
+  async getUsers2({ role, page = 1, limit = 10, search = '' }) {
+    // Convert page and limit to numbers
+    page = parseInt(String(page), 10) || 1;
+    limit = parseInt(String(limit), 10) || 10;
+
+    const skip = (page - 1) * limit;
+
+    // Build the where clause
+    const whereClause: any = {};
+    if (role) whereClause.role = role.toUpperCase();
+    if (search) {
+      whereClause.OR = [
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    // Fetch filtered and paginated users
+    const [users, totalCount] = await Promise.all([
+      this.prismaService.user.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
+      }),
+      this.prismaService.user.count({ where: whereClause }),
+    ]);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const nextPage = hasNextPage ? page + 1 : null;
+
+    return {
+      items: users,
+      meta: {
+        totalCount,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        nextPage,
+        lastPage: Math.ceil(totalCount / limit),
+      },
+    };
   }
 
   async getFormById(id: string) {
