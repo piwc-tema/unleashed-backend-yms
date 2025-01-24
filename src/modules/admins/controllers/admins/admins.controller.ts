@@ -85,21 +85,6 @@ export class AdminsController {
     return this.authService.updateUserRole(data.userId, data.role);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('resource')
-  async getProtectedResource(@Request() req) {
-    this.loggerService.log(`Protected resource accessed by user: ${req.user}`);
-    return `Protected resource accessed by user: ${req.user.userId}`;
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.VIEWER)
-  @Get('resource/admin')
-  async getAdminResource(@Request() req) {
-    this.loggerService.log(`Admin resource accessed by user: ${req.user}`);
-    return `Admin resource accessed by user: ${req.user.userId}`;
-  }
-
   @Get('dashboard')
   async getDashboard(
     @Query('status') status?: string,
@@ -121,6 +106,18 @@ export class AdminsController {
   @Get('users')
   async getUsers(@Request() req) {
     return this.adminsService.getUsers(req.query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  @Get('users2')
+  async getUsers2(
+    @Query('role') role?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query('search') search?: string,
+  ) {
+    return this.adminsService.getUsers2({ role, page, limit, search });
   }
 
   // GET /admins/forms/export
