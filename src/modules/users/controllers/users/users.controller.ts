@@ -12,6 +12,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Link generated successfully' })
   @ApiResponse({ status: 400, description: 'Email already registered' })
   async registerUser(@Body() dto: RegisterUserDto) {
-    return this.usersService.registerUser(dto);
+    console.log('dto\n', dto);
+    return { message: 'User registered successfully' };
   }
 }
