@@ -61,6 +61,12 @@ export class AuthService {
       where: { email: data.email },
     });
     if (user) {
+      // if user exists, set their role to the new role
+      if (user.role === data.role) {
+        throw new UnauthorizedException('User already has this role');
+      } else {
+        return this.updateUserRole(user.id, data.role || Role.VIEWER);
+      }
       throw new UnauthorizedException('User already exists');
     }
 
@@ -83,7 +89,7 @@ export class AuthService {
 
     // Send the temporary password to the user's email
     await this.emailService.sendEmail(
-      '',
+      newUser.email,
       'Welcome to Our YMS!',
       'temp-password',
       {
@@ -134,7 +140,7 @@ export class AuthService {
     // Send the temporary password to the user's email
     if (tempPassword) {
       await this.emailService.sendEmail(
-        '',
+        updatedUser.email,
         'Your Role has been Updated!',
         'temp-password',
         {
@@ -313,6 +319,10 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
+    if (!refreshToken) {
+      this.loggerService.debug('logout error: refresh token not provided');
+      return;
+    }
     try {
       // set blacklisted to true
       const updatedToken = await this.prismaService.tokens.update({
