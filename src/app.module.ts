@@ -13,6 +13,7 @@ import { AdminsModule } from './modules/admins/admins.module';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './core/filters/http-exception/http-exception.filter';
 import { AppConfigModule } from './core/config/app-config/app-config.module';
+import { QueueModule } from './infrastructure/queue/queue.module';
 @Module({
   imports: [
     AppConfigModule,
@@ -26,6 +27,7 @@ import { AppConfigModule } from './core/config/app-config/app-config.module';
     SecurityModule,
     LoggerModule,
     AdminsModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

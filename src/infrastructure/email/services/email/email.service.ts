@@ -83,6 +83,7 @@ export class EmailService {
         html,
         attachments,
       });
+      this.loggerService.log('email sent to: ', to);
     } catch (e) {
       this.loggerService.error('Error sending email:', e);
     }

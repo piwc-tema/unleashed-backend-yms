@@ -21,6 +21,7 @@
     "seed:reset": "RESET_DB=true npx prisma db seed"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",
@@ -32,6 +33,7 @@
     "@types/handlebars": "^4.1.0",
     "@types/nodemailer": "^6.4.17",
     "bcrypt": "^5.1.1",
+    "bullmq": "^5.39.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "exceljs": "^4.4.0",

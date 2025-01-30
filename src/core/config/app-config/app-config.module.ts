@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './env/env.validate';
 import emailConfig from './configs/email.config';
+import queueConfig from './configs/queue.config';
 
 @Module({
   imports: [
@@ -9,7 +10,7 @@ import emailConfig from './configs/email.config';
       isGlobal: true,
       validate,
       envFilePath: ['.env.local', '.env'],
-      load: [emailConfig],
+      load: [emailConfig, queueConfig],
     }),
   ],
 })
