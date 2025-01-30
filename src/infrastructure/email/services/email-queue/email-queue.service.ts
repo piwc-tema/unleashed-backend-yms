@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { QueueManagerService } from '../../../queue/services/queue-manager/queue-manager.service';
+import {
+  QueueManagerService,
+  QueueUnavailableError,
+} from '../../../queue/services/queue-manager/queue-manager.service';
 import { QueueProcessorService } from '../../../queue/services/queue-processor/queue-processor.service';
 import { EmailService } from '../email/email.service';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
@@ -63,7 +66,14 @@ export class EmailQueueService {
         data: emailData,
       });
     } catch (error) {
-      this.loggerService.error('Failed to queue email:', error);
+      if (error instanceof QueueUnavailableError) {
+        this.loggerService.warn(
+          'Email queuing skipped: Queue system unavailable',
+        );
+        // ToDo: store the failed email in your database
+        // await this.storePendingEmail(emailData);
+        return;
+      }
       throw error;
     }
   }

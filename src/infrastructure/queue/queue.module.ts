@@ -3,10 +3,11 @@ import { QueueManagerService } from './services/queue-manager/queue-manager.serv
 import { QueueProcessorService } from './services/queue-processor/queue-processor.service';
 import { LoggerModule } from '../../core/logger/logger.module';
 import { AppConfigModule } from '../../core/config/app-config/app-config.module';
+import { QueueHealthService } from './services/queue-health/queue-health.service';
 
 @Module({
   imports: [AppConfigModule, LoggerModule],
-  providers: [QueueManagerService, QueueProcessorService],
-  exports: [QueueManagerService, QueueProcessorService],
+  providers: [QueueManagerService, QueueProcessorService, QueueHealthService],
+  exports: [QueueManagerService, QueueProcessorService, QueueHealthService],
 })
 export class QueueModule {}
