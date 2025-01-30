@@ -1,23 +1,23 @@
 version: "3.8"
 services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - APP_NAME=${APP_NAME}
-      - PORT=${PORT}
-      - DATABASE_URL=postgres://myuser:mypassword@db:5432/unleashed-db
-      - JWT_SECRET=${JWT_SECRET}
-      - RESET_DB=${RESET_DB}
-      - SMTP_SERVICE=${SMTP_SERVICE}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - EMAIL_FROM=${EMAIL_FROM}
-      - TEST_EMAIL=${TEST_EMAIL}
+#  app:
+#    build: .
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - NODE_ENV=development
+#      - APP_NAME=${APP_NAME}
+#      - PORT=${PORT}
+#      - DATABASE_URL=postgres://myuser:mypassword@db:5432/unleashed-db
+#      - JWT_SECRET=${JWT_SECRET}
+#      - RESET_DB=${RESET_DB}
+#      - SMTP_SERVICE=${SMTP_SERVICE}
+#      - SMTP_HOST=${SMTP_HOST}
+#      - SMTP_PORT=${SMTP_PORT}
+#      - SMTP_USERNAME=${SMTP_USERNAME}
+#      - SMTP_PASSWORD=${SMTP_PASSWORD}
+#      - EMAIL_FROM=${EMAIL_FROM}
+#      - TEST_EMAIL=${TEST_EMAIL}
   db:
     image: postgres:14
     restart: always
