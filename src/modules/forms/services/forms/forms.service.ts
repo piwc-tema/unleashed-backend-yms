@@ -8,16 +8,17 @@ import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import { PrismaService } from '../../../../core/config/prisma/prisma/prisma.service';
 import { FormStatus } from '@prisma/client';
 import { FormSectionType } from '../../enum/form-section-type';
-import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
 import { RegisterUserDto } from '../../../users/dto/register-user.dto';
 import generateRegistrationLink from '../../../../shared/utils/link-generator';
+import { EmailJobData } from '../../../../infrastructure/queue/interfaces/queue-job/queue-job.interface';
+import { EmailQueueService } from '../../../../infrastructure/email/services/email-queue/email-queue.service';
 
 @Injectable()
 export class FormsService {
   constructor(
     private loggerService: LoggerService,
     private prismaService: PrismaService,
-    private emailService: EmailService,
+    private emailQueueService: EmailQueueService,
   ) {
     this.loggerService.setDefaultContext(FormsService.name);
   }
@@ -35,15 +36,18 @@ export class FormsService {
       this.loggerService.log(
         `Resending registration link (${registrationLink}) to ${dto.email}`,
       );
-      await this.emailService.sendEmail(
-        existingUser.email,
-        'Welcome to Our YMS!',
-        'link-email',
-        {
+      const emailData: EmailJobData = {
+        to: existingUser.email,
+        subject: 'Welcome to Our YMS!',
+        templateName: 'link-email',
+        context: {
           name: existingUser.firstName,
           link: registrationLink,
         },
-      );
+      };
+
+      // add email to queues
+      await this.emailQueueService.queueEmail(emailData);
 
       throw new ConflictException('Email already registered. Link resent.');
     }
@@ -67,15 +71,18 @@ export class FormsService {
       `Registration link (${registrationLink}) sent to ${dto.email}`,
     );
 
-    await this.emailService.sendEmail(
-      newUser.email,
-      'Welcome to Our YMS!',
-      'link-email',
-      {
+    const emailData: EmailJobData = {
+      to: newUser.email,
+      subject: 'Welcome to Our YMS!',
+      templateName: 'link-email',
+      context: {
         name: newUser.firstName,
         link: registrationLink,
       },
-    );
+    };
+
+    // add email to queues
+    await this.emailQueueService.queueEmail(emailData);
 
     return { link: registrationLink, formId: newUser.form.id };
   }

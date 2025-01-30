@@ -4,6 +4,8 @@ import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import * as ExcelJS from 'exceljs';
 import { Buffer } from 'buffer';
 import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
+import { EmailQueueService } from '../../../../infrastructure/email/services/email-queue/email-queue.service';
+import { EmailJobData } from '../../../../infrastructure/queue/interfaces/queue-job/queue-job.interface';
 
 @Injectable()
 export class AdminsService {
@@ -11,6 +13,7 @@ export class AdminsService {
     private prismaService: PrismaService,
     private loggerService: LoggerService,
     private emailService: EmailService,
+    private emailQueueService: EmailQueueService,
   ) {
     this.loggerService.setDefaultContext('AdminsService');
   }
@@ -236,17 +239,22 @@ export class AdminsService {
 
     // Write workbook to a buffer
     const buffer = await workbook.xlsx.writeBuffer();
+    const emailData: EmailJobData = {
+      to: '',
+      subject: 'Forms Export',
+      templateName: 'attachment-email',
+      context: { siteName: 'YMS' },
+      attachments: [
+        {
+          filename: 'forms.xlsx',
+          content: Buffer.from(buffer) as Buffer,
+        },
+      ],
+    };
 
     //send email with attachment
-    await this.emailService.sendEmailWithAttachment(
-      '',
-      'Forms Export',
-      'attachment-email',
-      { siteName: 'YMS' },
-      Buffer.from(buffer),
-      'forms.xlsx',
-    );
-    console.log('email sent!');
+    // add email to queues
+    await this.emailQueueService.queueEmail(emailData);
 
     return Buffer.from(buffer);
   }
