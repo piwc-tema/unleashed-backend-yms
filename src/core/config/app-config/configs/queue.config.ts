@@ -2,8 +2,7 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('queue', () => ({
   redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
   },
   defaultSettings: {
     attempts: parseInt(process.env.QUEUE_RETRY_ATTEMPTS || '3'),

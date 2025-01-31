@@ -44,10 +44,9 @@ export class QueueManagerService {
     }
 
     if (!this.queues.has(queueName)) {
-      console.log('check2');
       try {
         const queue = new Queue(queueName, {
-          connection: this.configService.get('queue.redis'),
+          connection: this.configService.get('queue.redis.url'),
         });
         this.queues.set(queueName, queue);
       } catch (error) {

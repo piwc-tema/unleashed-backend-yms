@@ -21,7 +21,7 @@ export class QueueProcessorService {
   ) {
     const worker = new Worker(queueName, processor, {
       concurrency,
-      connection: this.configService.get('queue.redis'),
+      connection: this.configService.get('queue.redis.url'),
     } as WorkerOptions);
 
     worker.on('completed', (job) => {
