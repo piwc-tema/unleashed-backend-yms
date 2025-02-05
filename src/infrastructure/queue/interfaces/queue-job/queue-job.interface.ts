@@ -20,3 +20,16 @@ export interface EmailJobData {
   context: Record<string, any>;
   attachments?: { filename: string; content: Buffer }[];
 }
+
+export interface QueueJobOptions {
+  priority?: number;
+  delay?: number;
+  attempts?: number;
+  backoff?: {
+    type: 'fixed' | 'exponential';
+    delay: number;
+  };
+  removeOnComplete?: boolean;
+  removeOnFail?: boolean;
+  jobId?: string;
+}

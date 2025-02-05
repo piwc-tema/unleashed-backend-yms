@@ -11,7 +11,7 @@ import { FormSectionType } from '../../enum/form-section-type';
 import { RegisterUserDto } from '../../../users/dto/register-user.dto';
 import generateRegistrationLink from '../../../../shared/utils/link-generator';
 import { EmailJobData } from '../../../../infrastructure/queue/interfaces/queue-job/queue-job.interface';
-import { EmailQueueService } from '../../../../infrastructure/email/services/email-queue/email-queue.service';
+import { EmailQueueService } from '../../../../infrastructure/queue/services/email-queue/email-queue.service';
 
 @Injectable()
 export class FormsService {

@@ -24,9 +24,14 @@ export class QueueHealthService implements OnModuleInit {
   }
 
   private initializeRedisConnection() {
-    const redisUrl = this.configService.get('queue.redis.url');
+    const redisHost = this.configService.get('queue.redis.host');
+    const redisPort = this.configService.get('queue.redis.port');
+    const redisPassword = this.configService.get('queue.redis.password');
 
-    this.redis = new Redis(redisUrl, {
+    this.redis = new Redis({
+      host: redisHost,
+      port: redisPort,
+      password: redisPassword,
       maxRetriesPerRequest: 1,
       retryStrategy: (times) => {
         if (times > 3) return null;

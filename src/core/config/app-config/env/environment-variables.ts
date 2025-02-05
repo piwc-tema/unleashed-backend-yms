@@ -40,11 +40,23 @@ export class EnvironmentVariables {
   TEST_EMAIL: string;
 
   @IsString()
-  REDIS_URL: string;
-
-  @IsString()
   QUEUE_RETRY_ATTEMPTS: string;
 
   @IsString()
   QUEUE_RETRY_DELAY: string;
+
+  @IsString()
+  REDIS_HOST: string;
+
+  @IsString()
+  REDIS_PORT: string;
+
+  @IsString()
+  REDIS_PASSWORD: string;
+
+  @IsString()
+  LOGGING_ENABLED: string;
+
+  @IsString()
+  LOG_LEVELS: string;
 }

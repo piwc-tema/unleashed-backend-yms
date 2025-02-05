@@ -1,43 +1,64 @@
-import { Injectable } from '@nestjs/common';
-import { Worker, Processor, WorkerOptions } from 'bullmq';
+import { OnQueueEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
-import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../../../email/services/email/email.service';
 
-@Injectable()
-export class QueueProcessorService {
-  private workers: Map<string, Worker> = new Map();
-
+@Processor('email-queue')
+export class QueueProcessorService extends WorkerHost {
   constructor(
     private loggerService: LoggerService,
-    private configService: ConfigService,
+    private emailService: EmailService,
   ) {
+    super();
     this.loggerService.setDefaultContext(QueueProcessorService.name);
   }
 
-  registerProcessor(
-    queueName: string,
-    processor: Processor,
-    concurrency: number = 1,
-  ) {
-    const worker = new Worker(queueName, processor, {
-      concurrency,
-      connection: this.configService.get('queue.redis.url'),
-    } as WorkerOptions);
+  async process(job: Job<any, any, string>): Promise<any> {
+    try {
+      this.loggerService.log(`Processing job ${job.id}`);
+      // Add your job processing logic here
+      const result = await this.processJobData(job.data);
+      return result;
+    } catch (error) {
+      this.loggerService.error(`Error processing job ${job.id}:`, error);
+      throw error;
+    }
+  }
 
-    worker.on('completed', (job) => {
-      this.loggerService.log(
-        `Job ${job.id} in queue ${queueName} completed successfully`,
-      );
-    });
+  private async processJobData(data: any) {
+    const { to, subject, templateName, context, attachments } = data;
 
-    worker.on('failed', (job, error) => {
-      this.loggerService.error(
-        `Job ${job?.id} in queue ${queueName} failed:`,
-        error.message,
-      );
-    });
+    try {
+      if (attachments?.content) {
+        return await this.emailService.sendEmail(
+          to,
+          subject,
+          templateName,
+          context,
+          attachments,
+        );
+      } else {
+        return await this.emailService.sendEmail(
+          to,
+          subject,
+          templateName,
+          context,
+        );
+      }
+    } catch (error) {
+      this.loggerService.error('Failed to process email job:', error);
+      throw error;
+    }
+  }
 
-    this.workers.set(queueName, worker);
-    return worker;
+  // Optional: custom event handlers
+  @OnQueueEvent('completed')
+  onCompleted(job: Job) {
+    this.loggerService.log(`Job ${job.id} completed successfully`);
+  }
+
+  @OnQueueEvent('failed')
+  onFailed(job: Job, error: Error) {
+    this.loggerService.error(`Job ${job.id} failed:`, error.message);
   }
 }
