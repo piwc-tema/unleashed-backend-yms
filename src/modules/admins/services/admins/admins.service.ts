@@ -3,8 +3,7 @@ import { PrismaService } from '../../../../core/config/prisma/prisma/prisma.serv
 import { LoggerService } from '../../../../core/logger/logger/logger.service';
 import * as ExcelJS from 'exceljs';
 import { Buffer } from 'buffer';
-import { EmailService } from '../../../../infrastructure/email/services/email/email.service';
-import { EmailQueueService } from '../../../../infrastructure/email/services/email-queue/email-queue.service';
+import { EmailQueueService } from '../../../../infrastructure/queue/services/email-queue/email-queue.service';
 import { EmailJobData } from '../../../../infrastructure/queue/interfaces/queue-job/queue-job.interface';
 
 @Injectable()
@@ -12,10 +11,9 @@ export class AdminsService {
   constructor(
     private prismaService: PrismaService,
     private loggerService: LoggerService,
-    private emailService: EmailService,
     private emailQueueService: EmailQueueService,
   ) {
-    this.loggerService.setDefaultContext('AdminsService');
+    this.loggerService.setDefaultContext(AdminsService.name);
   }
 
   async findAdminByEmail(email: string) {

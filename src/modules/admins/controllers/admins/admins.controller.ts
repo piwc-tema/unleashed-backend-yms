@@ -39,7 +39,7 @@ export class AdminsController {
     private authService: AuthService,
     private auditService: AuditService,
   ) {
-    this.loggerService.setDefaultContext('AdminsController');
+    this.loggerService.setDefaultContext(AdminsController.name);
   }
 
   @UseGuards(LocalAuthGuard)

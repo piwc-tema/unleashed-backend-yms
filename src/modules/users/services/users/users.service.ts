@@ -8,7 +8,7 @@ export class UsersService {
     private prismaService: PrismaService,
     private loggerService: LoggerService,
   ) {
-    this.loggerService.setDefaultContext('UsersService');
+    this.loggerService.setDefaultContext(UsersService.name);
   }
 
   async createUser(data: any) {

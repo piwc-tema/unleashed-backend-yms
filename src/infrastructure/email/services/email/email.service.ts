@@ -19,7 +19,7 @@ export class EmailService {
     private configService: ConfigService,
     private loggerService: LoggerService,
   ) {
-    this.loggerService.setDefaultContext('EmailService');
+    this.loggerService.setDefaultContext(EmailService.name);
     this.initializeTransporter();
     this.initializeTemplates();
   }
