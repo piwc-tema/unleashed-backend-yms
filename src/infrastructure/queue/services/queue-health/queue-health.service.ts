@@ -25,7 +25,6 @@ export class QueueHealthService implements OnModuleInit {
 
   private initializeRedisConnection() {
     const redisUrl = this.configService.get('queue.redis.url');
-    console.log(redisUrl);
 
     this.redis = new Redis(redisUrl, {
       maxRetriesPerRequest: 1,
