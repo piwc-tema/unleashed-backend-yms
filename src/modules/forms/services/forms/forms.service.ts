@@ -31,7 +31,6 @@ export class FormsService {
     if (existingUser) {
       // get the form for the user
       const form = await this.findOneByUserId(existingUser.id);
-      console.log('form\n', form);
       const registrationLink = generateRegistrationLink(form.id);
       this.loggerService.log(
         `Resending registration link (${registrationLink}) to ${dto.email}`,
