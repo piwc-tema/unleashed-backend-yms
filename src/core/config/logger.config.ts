@@ -1,4 +1,7 @@
-import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
+import {
+  utilities as nestWinstonModuleUtilities,
+  WinstonModuleOptions,
+} from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import * as process from 'process';
@@ -55,35 +58,35 @@ export const getLoggerConfig = (): LoggerConfig => {
   };
 };
 
-const createConsoleTransport = (levels: LogLevel[]) => {
-  const winstonLevels = levels.map((level) => LOG_LEVEL_MAP[level]);
+const config = getLoggerConfig();
+const winstonLevels = (config.levels || DEFAULT_LOG_LEVELS).map(
+  (level) => LOG_LEVEL_MAP[level],
+);
+export const loggerConfig: WinstonModuleOptions = {
+  transports: [
+    ...(config.enabled
+      ? [
+          new winston.transports.Console({
+            // level: Math.max(
+            //   ...winstonLevels.map((level) => winston.config.npm.levels[level]),
+            // ).toString(),
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.ms(),
+              winston.format.errors({ stack: true }),
+              winston.format.splat(),
+              winston.format.json(),
+              nestWinstonModuleUtilities.format.nestLike('Unleashed', {
+                prettyPrint: true,
+                colors: true,
+                processId: true,
+                appName: true,
+              }),
+            ),
+          }),
+        ]
+      : []),
 
-  return new winston.transports.Console({
-    level: Math.max(
-      ...winstonLevels.map((level) => winston.config.npm.levels[level]),
-    ).toString(),
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.ms(),
-      winston.format.errors({ stack: true }),
-      winston.format.splat(),
-      winston.format.json(),
-      nestWinstonModuleUtilities.format.nestLike(process.env.APP_NAME, {
-        prettyPrint: true,
-        colors: true,
-        processId: true,
-        appName: true,
-      }),
-    ),
-  });
-};
-
-const createFileTransports = (levels: LogLevel[]) => {
-  const winstonLevels = levels.map((level) => LOG_LEVEL_MAP[level]);
-  const transports: winston.transport[] = [];
-
-  // add error transport
-  transports.push(
     new winston.transports.DailyRotateFile({
       filename: 'logs/error-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
@@ -96,48 +99,20 @@ const createFileTransports = (levels: LogLevel[]) => {
         winston.format.json(),
       ),
     }),
-  );
 
-  // Add general log file if any levels are enabled
-  if (levels.length > 0) {
-    transports.push(
-      new winston.transports.DailyRotateFile({
-        filename: 'logs/application-%DATE%.log',
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '14d',
-        level: Math.max(
-          ...winstonLevels.map((level) => winston.config.npm.levels[level]),
-        ).toString(),
-        format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format.json(),
-        ),
-      }),
-    );
-  }
-
-  return transports;
+    new winston.transports.DailyRotateFile({
+      filename: 'logs/application-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+      level: Math.max(
+        ...winstonLevels.map((level) => winston.config.npm.levels[level]),
+      ).toString(),
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json(),
+      ),
+    }),
+  ],
 };
-
-export const loggerConfig = (() => {
-  const config = getLoggerConfig();
-
-  if (!config.enabled) {
-    return {
-      transports: [
-        new winston.transports.Console({
-          silent: true,
-        }),
-      ],
-    };
-  }
-
-  return {
-    transports: [
-      createConsoleTransport(config.levels || DEFAULT_LOG_LEVELS),
-      ...createFileTransports(config.levels || DEFAULT_LOG_LEVELS),
-    ],
-  };
-})();
