@@ -100,24 +100,17 @@ export class AdminsController {
     });
   }
 
-  // get list of all user with filters for roles
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
+  // get list of all user with filters for role
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
   @Get('users')
-  async getUsers(@Request() req) {
-    return this.adminsService.getUsers(req.query);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.VIEWER, Role.EDITOR)
-  @Get('users2')
-  async getUsers2(
+  async getUsers(
     @Query('role') role?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
     @Query('search') search?: string,
   ) {
-    return this.adminsService.getUsers2({ role, page, limit, search });
+    return this.adminsService.getUsers({ role, page, limit, search });
   }
 
   // GET /admins/forms/export

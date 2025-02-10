@@ -97,14 +97,7 @@ export class AdminsService {
   }
 
   // get list of all users based on provided input filters for roles
-  async getUsers({ role }) {
-    const whereClause: any = {};
-    if (role) whereClause.role = role.toUpperCase();
-
-    return this.prismaService.user.findMany({ where: whereClause });
-  }
-
-  async getUsers2({ role, page = 1, limit = 10, search = '' }) {
+  async getUsers({ role, page = 1, limit = 10, search = '' }) {
     // Convert page and limit to numbers
     page = parseInt(String(page), 10) || 1;
     limit = parseInt(String(limit), 10) || 10;
