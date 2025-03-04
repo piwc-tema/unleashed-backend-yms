@@ -29,7 +29,7 @@ export class QueueProcessorService extends WorkerHost {
     const { to, subject, templateName, context, attachments } = data;
 
     try {
-      if (attachments?.content) {
+      if (attachments.length > 0) {
         return await this.emailService.sendEmail(
           to,
           subject,
