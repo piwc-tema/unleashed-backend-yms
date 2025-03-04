@@ -81,33 +81,21 @@ export class EmailService {
         to: to || this.configService.get<string>('TEST_EMAIL'),
         subject,
         html,
-        attachments,
+        attachments: attachments?.map((attachment) => ({
+          filename: attachment.filename,
+          content: Buffer.isBuffer(attachment.content)
+            ? attachment.content
+            : Buffer.from(attachment.content),
+        })),
       });
       this.loggerService.log('email sent to: ', to);
     } catch (e) {
-      this.loggerService.error('Error sending email:', e);
+      this.loggerService.error(
+        `Error sending email: ${e.message}`,
+        e.stack,
+        e.code,
+        e.command,
+      );
     }
-  }
-
-  async sendEmailWithAttachment(
-    to: string,
-    subject: string,
-    templateName: string,
-    context: Record<string, any> = {},
-    attachment?: Buffer,
-    filename?: string,
-  ) {
-    if (attachment) {
-      const attachments = [
-        {
-          filename: filename || 'attachment.xlsx',
-          content: attachment,
-        },
-      ];
-      console.log('attachments', attachments);
-      return this.sendEmail(to, subject, templateName, context, attachments);
-    }
-
-    throw new Error('Attachment not found');
   }
 }
