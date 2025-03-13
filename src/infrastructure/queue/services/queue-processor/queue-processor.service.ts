@@ -1,7 +1,7 @@
-import { OnQueueEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
-import { LoggerService } from '../../../../core/logger/logger/logger.service';
-import { EmailService } from '../../../email/services/email/email.service';
+import { OnQueueEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Job } from "bullmq";
+import { LoggerService } from "../../../../core/logger/logger/logger.service";
+import { EmailService } from "../../../email/services/email/email.service";
 
 @Processor('email-queue')
 export class QueueProcessorService extends WorkerHost {
@@ -17,8 +17,7 @@ export class QueueProcessorService extends WorkerHost {
     try {
       this.loggerService.log(`Processing job ${job.id}`);
       // Add your job processing logic here
-      const result = await this.processJobData(job.data);
-      return result;
+      return await this.processJobData(job.data);
     } catch (error) {
       this.loggerService.error(`Error processing job ${job.id}:`, error);
       throw error;
@@ -29,7 +28,7 @@ export class QueueProcessorService extends WorkerHost {
     const { to, subject, templateName, context, attachments } = data;
 
     try {
-      if (attachments?.content) {
+      if (attachments.length > 0) {
         return await this.emailService.sendEmail(
           to,
           subject,

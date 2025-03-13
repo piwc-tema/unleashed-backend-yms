@@ -22,9 +22,17 @@ export class LoggerService implements NestLogger {
     this.logger.info(message, { context: context || this.defaultContext });
   }
 
-  error(message: string, trace: string, context?: string) {
+  error(
+    message: string,
+    trace: any,
+    code?: string,
+    command?: string,
+    context?: string,
+  ) {
     this.logger.error(message, {
       trace,
+      code,
+      command,
       context: context || this.defaultContext,
     });
   }
